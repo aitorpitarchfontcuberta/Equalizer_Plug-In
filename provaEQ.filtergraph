@@ -65,10 +65,10 @@
           uiLastY_Normal="116" uiopen_Normal="0">
     <PLUGIN name="AudioFilePlayer" format="VST3" category="Fx" manufacturer="Matkat Music LLC"
             version="1.0.0" file="C:\Users\Aitor\Documents\AudioFilePlayer\Builds\VisualStudio2026\x64\Debug\VST3\AudioFilePlayer.vst3\Contents\x86_64-win\AudioFilePlayer.vst3"
-            uniqueId="79fe81c" isInstrument="0" fileTime="19d3f9c3690" infoUpdateTime="19d3fa552e2"
+            uniqueId="79fe81c" isInstrument="0" fileTime="19d3f9c3690" infoUpdateTime="19d4b5b1106"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="e95d02c7"/>
-    <STATE>298.VMjLgDR....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9DyL43BTIISX1UEaho2ZVkUdAAkKAwDUigWRWkEcQ0VTucmUY4BQ1wTQLolShUELhsVRxHlXEQkV5gCahIVTTkUdyYzX0EzQWETPGo0ZmcDRTM1UZQWPRsjYlUzXmcmQH4lYTQ0ayHUX10zPt3hKt3hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEVtPDTtHzZGI1YMIiXtPDTtLjKPcjKt3hKt3hKt3haTU0PUQDU3sFaicVTWkEQEYzXmEDOujzPu0Fbu4VYtQmO77hUSQ0LPwVcmklaSQWXzUlO..</STATE>
+    <STATE>306.VMjLgjR....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9DCM03BTIISX1UEaho2ZVkUdAAkKAwDUigWRWkEcQ0VTucmUY4BQP4TQLolShUELhsVRxHlXEQkV5gCahIVTTkUdyYzX0EzQWETUGk0a3XzUAEzQZs1YGgDUickVzEjTKYlYEM1Y2YDRtYFUT81LRElcMMjKt3hKt3hKt3hKt3hKJUELPUTPqI1aYcEV5UkQQcVTWgkKDAkKBs1QhcVSxHlKDAkKC4BTG4hKt3hKt3hKt3FUUMTUDQEdqw1XmE0UYQTQFM1YAwyKIMzasA2atUlaz4COuX0TTMCTrU2Yo41TzEFck4C.</STATE>
     <LAYOUT>
       <INPUTS>
         <BUS index="0" layout="L R"/>
@@ -78,11 +78,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="6" x="0.5525" y="0.530241935483871" useARA="0" uiLastX_Normal="356"
-          uiLastY_Normal="100" uiopen_Normal="0">
+  <FILTER uid="6" x="0.5525" y="0.530241935483871" useARA="0" uiLastX_Normal="161"
+          uiLastY_Normal="173" uiopen_Normal="0">
     <PLUGIN name="EQ" format="VST3" category="Fx" manufacturer="yourcompany"
             version="1.0.0" file="C:\Users\Aitor\Desktop\Audio\EQ\Builds\VisualStudio2026\x64\Debug\VST3\EQ.vst3\Contents\x86_64-win\EQ.vst3"
-            uniqueId="6aedfe6" isInstrument="0" fileTime="19d3f672763" infoUpdateTime="19d3fa552e3"
+            uniqueId="6aedfe6" isInstrument="0" fileTime="19d4b590560" infoUpdateTime="19d4b5b1107"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="e95cc589"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
