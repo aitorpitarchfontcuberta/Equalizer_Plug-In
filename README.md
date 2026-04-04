@@ -1,40 +1,109 @@
-# Equalizer Plugin Documentation
+# Equalizer Plug-In
 
-## Overview
-The Equalizer Plugin is a powerful audio processing tool designed to enhance sound quality by allowing users to adjust various frequency bands. It can be used in various applications, from music production to live sound optimization.
+## Project Overview
+This repository contains a basic audio equalizer plugin developed in C++ using the JUCE framework. The plugin is currently under active development with continuous updates focused on adding modules and building a more complex and consistent system.
 
-## Features
-- **Real-time Frequency Adjustment:** Change frequency bands in real-time.
-- **User-Friendly Interface:** Intuitive controls for easy adjustments.
-- **Multiple Presets:** Store and recall custom settings.
-- **Compatibility:** Works with various audio formats and digital audio workstations (DAWs).
+## Getting Started
 
-## Installation
-1. Download the Equalizer Plugin from the releases page.
-2. Extract the files to your preferred VST/AU plugins directory.
-3. Scan for new plugins in your DAW.
+### Prerequisites
+- JUCE framework installed
+- C++17 or later compiler
+- CMake (version 3.15 or higher)
+- Platform-specific requirements:
+  - **Windows**: Visual Studio 2019 or later
+  - **macOS**: Xcode 12 or later
+  - **Linux**: GCC or Clang
+
+### Accessing the Code
+Clone this repository:
+```
+git clone https://github.com/aitorpitarchfontcuberta/Equalizer_Plug-In.git
+cd Equalizer_Plug-In
+```
+
+## Building the Plugin
+
+### Option 1: Using Projucer (Recommended)
+1. Open Projucer
+2. Load the `EQ.jucer` file
+3. Select your target platform in the exporters
+4. Click "Create" to generate project files
+5. Open the generated project in your IDE and build
+
+### Option 2: Command Line Build
+
+**Windows (Visual Studio):**
+```
+cd Builds/VisualStudio2026
+cmake --build . --config Release
+```
+
+**macOS:**
+```
+cd Builds/MacOSX
+cmake --build . --config Release
+```
+
+**Linux:**
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+### Build Outputs
+- **EQ_StandalonePlugin**: Located in `Builds/[Platform]/bin/Release/`
+- **EQ_VST3**: Located in standard VST3 plugin directories:
+  - Windows: `C:\Program Files\Common Files\VST3\`
+  - macOS: `~/Library/Audio/Plug-Ins/VST3/`
+  - Linux: `~/.vst3/`
 
 ## Usage
-1. Load the Equalizer Plugin within your DAW.
-2. Use the sliders to adjust the frequency bands according to your preference.
-3. Apply and save your settings to a preset.
 
-## Specifications
-- **Supported Formats:** VST2, VST3, AU
-- **Minimum System Requirements:** Windows 10 or macOS 10.14 and above.
+### Standalone Application
+Run the standalone executable directly. It includes a built-in audio interface for testing and processing audio files.
+
+### VST3 Plugin
+1. Copy the VST3 plugin to the appropriate directory for your operating system (see Build Outputs above)
+2. Rescan plugins in your DAW
+3. Load the "EQ" plugin in an audio track
+4. Adjust the equalizer controls in real-time
+
+## Documentation
+For detailed information about updates, features, and development progress, refer to the `EQ_Documentation.pdf` file in this repository. This document is continuously updated with the latest changes and improvements.
+
+## Project Structure
+```
+Equalizer_Plug-In/
+├── Source/
+│   ├── PluginProcessor.cpp
+│   ├── PluginProcessor.h
+│   ├── PluginEditor.cpp
+│   └── PluginEditor.h
+├── Builds/
+│   ├── VisualStudio2026/
+│   ├── MacOSX/
+│   └── Linux/
+├── EQ.jucer
+├── provaEQ.filtergraph
+└── README.md
+```
+
+## Troubleshooting
+
+**Plugin not found in DAW:**
+- Ensure the plugin is built in Release mode
+- Check that the plugin is in the correct VST3 directory
+- Rescan plugins in your DAW settings
+
+**Build errors:**
+- Verify JUCE modules are correctly linked in EQ.jucer
+- Check that your compiler version meets the minimum requirements
+- Ensure all dependencies are installed
 
 ## Contributing
-We welcome contributions from the community. To contribute to the Equalizer Plugin:
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request.
+If you wish to contribute to this project, please fork the repository and submit pull requests with your changes.
 
 ## License
-The Equalizer Plugin is licensed under the MIT License. See LICENSE for more information.
-
-## Support
-For any inquiries or support requests, please reach out via the issues section of the repository.
-
-## Current Date and Time
-- Date: 2026-04-04
-- Time: 10:01:25 (UTC)
+This project is provided as-is. Check the LICENSE file for more details.
