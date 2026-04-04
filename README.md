@@ -71,7 +71,7 @@ Run the standalone executable directly. It includes a built-in audio interface f
 4. Adjust the equalizer controls in real-time
 
 ## Documentation
-For detailed information about updates, features, and development progress, refer to the `EQ_Documentation.pdf` file in this repository. This document is continuously updated with the latest changes and improvements.
+For detailed information about updates, features, and development progress, refer to the `Documentation_ENG.pdf` or `Documentation_ESP.pdf` files in this repository. This document is continuously updated with the latest changes and improvements.
 
 ## Project Structure
 ```
@@ -102,8 +102,10 @@ Equalizer_Plug-In/
 - Check that your compiler version meets the minimum requirements
 - Ensure all dependencies are installed
 
-## Contributing
-If you wish to contribute to this project, please fork the repository and submit pull requests with your changes.
+## Author / Contact
 
-## License
-This project is provided as-is. Check the LICENSE file for more details.
+Project author: Aitor Pitarch
+
+[GitHub](https://github.com/aitorpitarchfontcuberta)    [Linkedin](https://linkedin.com/in/aitor-pitarch-fontcuberta-a9970a367)
+
+For questions about the project, simulation details, or to request raw data/scripts, open an issue in this repository or contact me via LinkedIn.
