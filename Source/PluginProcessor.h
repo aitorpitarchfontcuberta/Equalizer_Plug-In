@@ -169,13 +169,14 @@ public:
     SingleChannelSampleFifo<juce::AudioBuffer<float>> leftChannelFifo  { Channel::Left  };
     SingleChannelSampleFifo<juce::AudioBuffer<float>> rightChannelFifo { Channel::Right };
 
-private:
+    
     // --- Tipos del procesador de filtros ---
-    using Filter    = juce::dsp::IIR::Filter<float>;
+    using Filter = juce::dsp::IIR::Filter<float>;
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
-
     MonoChain leftChain, rightChain;
+
+private:
 
     enum ChainPositions { LowCut, Peak, HighCut };
 

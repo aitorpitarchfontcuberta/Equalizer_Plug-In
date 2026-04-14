@@ -13,7 +13,7 @@
 //  Constantes FFT compartidas entre el analyzer y el editor
 // ============================================================
 static constexpr int FFT_ORDER = 11;           // 2^11 = 2048 puntos
-static constexpr int FFT_SIZE  = 1 << FFT_ORDER;
+static constexpr int FFT_SIZE = 1 << FFT_ORDER;
 
 // ============================================================
 //  SpectrumAnalyzer
@@ -25,70 +25,71 @@ struct SpectrumAnalyzer
 {
     SpectrumAnalyzer(SingleChannelSampleFifo<juce::AudioBuffer<float>>& fifo)
         : fifo(fifo),
-          forwardFFT(FFT_ORDER),
-          window(FFT_SIZE + 1, juce::dsp::WindowingFunction<float>::hann)
+        forwardFFT(FFT_ORDER),
+        window(FFT_SIZE, juce::dsp::WindowingFunction<float>::hann)
     {
         fftData.assign(2 * FFT_SIZE, 0.0f);
         monoBuffer.resize(FFT_SIZE, 0.0f);
         drawingData.fill(0.0f);
     }
 
-    // Llamado desde el Timer del ResponseCurveComponent (GUI thread).
-    // sampleRate se pasa desde el procesador para calcular bien la frecuencia de cada bin.
+    static constexpr float NOISE_FLOOR = -72.0f;
+    static constexpr float MAX_DB = 0.0f;
+    static constexpr float ATTACK_COEFF = 0.30f;
+    static constexpr float DECAY_COEFF = 0.08f;
+
     void process(double sampleRate)
     {
         currentSampleRate = (sampleRate > 0.0) ? sampleRate : 44100.0;
 
         juce::AudioBuffer<float> tempBuffer(1, FFT_SIZE);
+        bool hasNewData = false;
 
-        // Drena el FIFO: nos quedamos con el bloque más reciente
         while (fifo.getNextAudioBlock(tempBuffer))
         {
             auto* ptr = tempBuffer.getReadPointer(0);
             for (int i = 0; i < FFT_SIZE; ++i)
                 monoBuffer[i] = ptr[i];
+
+            hasNewData = true;
         }
 
-        // Ventana Hann → reduce spectral leakage
-        window.multiplyWithWindowingTable(monoBuffer.data(), FFT_SIZE);
+        if (!hasNewData) return;
 
-        // Copia a fftData (necesita 2×FFT_SIZE) y calcula magnitudes
         std::fill(fftData.begin(), fftData.end(), 0.0f);
         std::copy(monoBuffer.begin(), monoBuffer.end(), fftData.begin());
+
+        window.multiplyWithWindowingTable(fftData.data(), FFT_SIZE);
         forwardFFT.performFrequencyOnlyForwardTransform(fftData.data());
 
-        // Normaliza bins a 0..1 con suavizado asimétrico (ataque rápido, caída lenta)
+        // Normalización de amplitud y conversión a decibelios
         for (int i = 0; i < FFT_SIZE / 2; ++i)
         {
-            float dB         = juce::Decibels::gainToDecibels(fftData[i]);
-            float normalized = juce::jlimit(0.0f, 1.0f,
-                                   juce::jmap(dB, NOISE_FLOOR, MAX_DB, 0.0f, 1.0f));
-            float coeff = (normalized > drawingData[i]) ? ATTACK_COEFF : DECAY_COEFF;
-            drawingData[i] = normalized * coeff + drawingData[i] * (1.0f - coeff);
+            float mag = fftData[i] / (float)FFT_SIZE;
+            float dB = juce::Decibels::gainToDecibels(mag);
+            float val = juce::jlimit(0.0f, 1.0f, juce::jmap(dB, NOISE_FLOOR, MAX_DB, 0.0f, 1.0f));
+
+            float coeff = (val > drawingData[i]) ? ATTACK_COEFF : DECAY_COEFF;
+            drawingData[i] = val * coeff + drawingData[i] * (1.0f - coeff);
         }
     }
 
-    // Frecuencia central del bin i (Hz) — usa el sampleRate real
+    std::array<float, FFT_SIZE / 2> getDrawingData() const { return drawingData; }
+
     float binToFreq(int bin) const
     {
         return (float)bin * (float)currentSampleRate / (float)FFT_SIZE;
     }
 
-    // Datos listos para pintar — un valor [0..1] por bin
-    std::array<float, FFT_SIZE / 2> drawingData;
-    double currentSampleRate { 44100.0 };
-
 private:
-    static constexpr float NOISE_FLOOR  = -100.0f;
-    static constexpr float MAX_DB       =    0.0f;
-    static constexpr float ATTACK_COEFF =    0.30f;
-    static constexpr float DECAY_COEFF  =    0.08f;
-
     SingleChannelSampleFifo<juce::AudioBuffer<float>>& fifo;
-    juce::dsp::FFT                                     forwardFFT;
-    juce::dsp::WindowingFunction<float>                window;
-    std::vector<float>                                 fftData;
-    std::vector<float>                                 monoBuffer;
+    juce::dsp::FFT forwardFFT;
+    juce::dsp::WindowingFunction<float> window;
+
+    std::vector<float> fftData;
+    std::vector<float> monoBuffer;
+    std::array<float, FFT_SIZE / 2> drawingData;
+    double currentSampleRate{ 44100.0 };
 };
 
 // ============================================================
@@ -99,8 +100,8 @@ private:
 //  Es a la vez el Timer owner (a través del SpectrumAnalyzer).
 // ============================================================
 class ResponseCurveComponent : public juce::Component,
-                               public juce::AudioProcessorParameter::Listener,
-                               public juce::Timer
+    public juce::AudioProcessorParameter::Listener,
+    public juce::Timer
 {
 public:
     ResponseCurveComponent(EQAudioProcessor& p);
@@ -120,7 +121,7 @@ private:
     EQAudioProcessor& audioProcessor;
 
     // Flag atómico: un parámetro cambió → necesitamos recalcular la curva
-    juce::Atomic<bool> parametersChanged { false };
+    juce::Atomic<bool> parametersChanged{ false };
 
     // Curva de magnitud de los filtros — recalculada en el GUI thread
     // cuando cambia cualquier parámetro (sin tocar el audio thread)
@@ -132,7 +133,7 @@ private:
     // Recalcula filterCurvePath a partir de los valores actuales del APVTS
     void updateFilterCurve();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ResponseCurveComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResponseCurveComponent)
 };
 
 // ============================================================
@@ -143,9 +144,9 @@ struct RotarySliderWithLabels : juce::Slider
 {
     RotarySliderWithLabels(juce::RangedAudioParameter& param, const juce::String& unitSuffix)
         : juce::Slider(juce::Slider::RotaryHorizontalVerticalDrag,
-                       juce::Slider::NoTextBox),
-          param(&param),
-          suffix(unitSuffix)
+            juce::Slider::NoTextBox),
+        param(&param),
+        suffix(unitSuffix)
     {
         setLookAndFeel(&lnf);
     }
@@ -159,11 +160,11 @@ struct RotarySliderWithLabels : juce::Slider
     struct LookAndFeel : juce::LookAndFeel_V4
     {
         void drawRotarySlider(juce::Graphics& g,
-                              int x, int y, int width, int height,
-                              float sliderPosProportional,
-                              float rotaryStartAngle,
-                              float rotaryEndAngle,
-                              juce::Slider&) override;
+            int x, int y, int width, int height,
+            float sliderPosProportional,
+            float rotaryStartAngle,
+            float rotaryEndAngle,
+            juce::Slider&) override;
     };
 
     juce::String getDisplayString() const;
@@ -194,27 +195,27 @@ private:
 
     // --- Sliders rotatorios ---
     RotarySliderWithLabels peakFreqSlider,
-                           peakGainSlider,
-                           peakQualitySlider,
-                           lowCutFreqSlider,
-                           highCutFreqSlider;
+        peakGainSlider,
+        peakQualitySlider,
+        lowCutFreqSlider,
+        highCutFreqSlider;
 
     // --- ComboBoxes para los slopes ---
     juce::ComboBox lowCutSlopeBox, highCutSlopeBox;
 
     // --- Attachments (conectan sliders/combos con el APVTS) ---
-    using APVTS    = juce::AudioProcessorValueTreeState;
+    using APVTS = juce::AudioProcessorValueTreeState;
     using SliderAt = APVTS::SliderAttachment;
-    using ComboAt  = APVTS::ComboBoxAttachment;
+    using ComboAt = APVTS::ComboBoxAttachment;
 
     SliderAt peakFreqAttachment,
-             peakGainAttachment,
-             peakQualityAttachment,
-             lowCutFreqAttachment,
-             highCutFreqAttachment;
+        peakGainAttachment,
+        peakQualityAttachment,
+        lowCutFreqAttachment,
+        highCutFreqAttachment;
 
     ComboAt lowCutSlopeAttachment,
-            highCutSlopeAttachment;
+        highCutSlopeAttachment;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EQAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQAudioProcessorEditor)
 };

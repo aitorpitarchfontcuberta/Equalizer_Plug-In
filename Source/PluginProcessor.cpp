@@ -79,8 +79,8 @@ void EQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     //  Usamos fftSize (2048) para que siempre haya suficientes muestras
     //  para un análisis FFT completo.
     // -----------------------------------------------------------------
-    leftChannelFifo.prepare(samplesPerBlock);
-    rightChannelFifo.prepare(samplesPerBlock);
+        leftChannelFifo.prepare(8192);
+        rightChannelFifo.prepare(8192);
 }
 
 void EQAudioProcessor::releaseResources() {}

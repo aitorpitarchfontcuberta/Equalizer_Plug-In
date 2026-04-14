@@ -10,6 +10,15 @@
 //==============================================================================
 //  Helpers de layout  (frecuencia → posición X logarítmica)
 //==============================================================================
+
+static float mapXToFreq(float x, float leftX, float width)
+{
+    static const float logMin = std::log10(20.0f);
+    static const float logMax = std::log10(20000.0f);
+    float normalizedX = (x - leftX) / width;
+    return std::pow(10.0f, logMin + normalizedX * (logMax - logMin));
+}
+
 static float mapFreqToX(float freq, float leftX, float width)
 {
     // Eje X: log10(20..20000) → 0..width
@@ -34,9 +43,9 @@ void RotarySliderWithLabels::LookAndFeel::drawRotarySlider(
 
     // Reservamos 16px abajo para el nombre del parámetro
     auto labelH = 16;
-    auto bounds  = Rectangle<float>(x, y, width, height - labelH);
-    auto radius  = jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
-    auto center  = bounds.getCentre();
+    auto bounds = Rectangle<float>(x, y, width, height - labelH);
+    auto radius = jmin(bounds.getWidth(), bounds.getHeight()) / 2.0f;
+    auto center = bounds.getCentre();
 
     // --- Fondo del knob ---
     g.setColour(Colour(35, 35, 40));
@@ -50,7 +59,7 @@ void RotarySliderWithLabels::LookAndFeel::drawRotarySlider(
     auto trackR = radius - 5.0f;
     Path arcBg;
     arcBg.addCentredArc(center.x, center.y, trackR, trackR,
-                        0.0f, rotaryStartAngle, rotaryEndAngle, true);
+        0.0f, rotaryStartAngle, rotaryEndAngle, true);
     g.setColour(Colour(55, 55, 60));
     g.strokePath(arcBg, PathStrokeType(3.5f, PathStrokeType::curved, PathStrokeType::rounded));
 
@@ -58,14 +67,14 @@ void RotarySliderWithLabels::LookAndFeel::drawRotarySlider(
     float angle = rotaryStartAngle + sliderPosProportional * (rotaryEndAngle - rotaryStartAngle);
     Path arcVal;
     arcVal.addCentredArc(center.x, center.y, trackR, trackR,
-                         0.0f, rotaryStartAngle, angle, true);
+        0.0f, rotaryStartAngle, angle, true);
     g.setColour(Colour(0, 175, 215));
     g.strokePath(arcVal, PathStrokeType(3.5f, PathStrokeType::curved, PathStrokeType::rounded));
 
     // --- Línea indicadora (desde centro hasta borde interior) ---
     auto thumbR = radius - 11.0f;
     Point<float> thumbPt(center.x + thumbR * std::sin(angle),
-                         center.y - thumbR * std::cos(angle));
+        center.y - thumbR * std::cos(angle));
     g.setColour(Colour(210, 210, 210));
     g.drawLine(Line<float>(center, thumbPt), 2.0f);
 
@@ -79,8 +88,8 @@ void RotarySliderWithLabels::LookAndFeel::drawRotarySlider(
         g.setColour(Colour(200, 200, 200));
         g.setFont(FontOptions(10.5f));
         g.drawFittedText(rsw->getDisplayString(),
-                         bounds.withSizeKeepingCentre(radius * 1.4f, radius * 0.6f).toNearestInt(),
-                         Justification::centred, 1);
+            bounds.withSizeKeepingCentre(radius * 1.4f, radius * 0.6f).toNearestInt(),
+            Justification::centred, 1);
 
         // --- Nombre del parámetro debajo del knob ---
         g.setColour(Colour(120, 120, 130));
@@ -101,8 +110,8 @@ juce::String RotarySliderWithLabels::getDisplayString() const
 
     if (std::abs(val) >= 1000.0f)
     {
-        val  /= 1000.0f;
-        addK  = true;
+        val /= 1000.0f;
+        addK = true;
     }
 
     // 2 decimales si < 10, 1 si < 100, 0 en adelante
@@ -118,7 +127,7 @@ juce::String RotarySliderWithLabels::getDisplayString() const
 //==============================================================================
 ResponseCurveComponent::ResponseCurveComponent(EQAudioProcessor& p)
     : audioProcessor(p),
-      leftSpectrumAnalyzer(p.leftChannelFifo)
+    leftSpectrumAnalyzer(p.leftChannelFifo)
 {
     // Suscribirse a cambios de parámetros
     const auto& params = audioProcessor.getParameters();
@@ -160,11 +169,11 @@ void ResponseCurveComponent::updateFilterCurve()
     //  Así evitamos cualquier data-race.
     // -------------------------------------------------------------------
     auto chainSettings = getChainSettings(audioProcessor.apvts);
-    double sampleRate  = audioProcessor.getSampleRate();
+    double sampleRate = audioProcessor.getSampleRate();
     if (sampleRate <= 0.0) sampleRate = 44100.0;
 
     auto bounds = getLocalBounds().toFloat();
-    auto width  = bounds.getWidth();
+    auto width = bounds.getWidth();
 
     filterCurvePath.clear();
 
@@ -176,7 +185,7 @@ void ResponseCurveComponent::updateFilterCurve()
         // Frecuencia correspondiente a este píxel (escala log)
         float freq = std::pow(10.0f,
             juce::jmap((float)px, 0.0f, width - 1,
-                       std::log10(20.0f), std::log10(20000.0f)));
+                std::log10(20.0f), std::log10(20000.0f)));
 
         // --- Peak filter ---
         auto peakCoeff = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
@@ -198,8 +207,8 @@ void ResponseCurveComponent::updateFilterCurve()
 
         // Convierte magnitud a dB y mapea al eje Y (±24 dB range)
         float dB = (float)juce::Decibels::gainToDecibels(mag);
-        float y  = juce::jmap(dB, -24.0f, 24.0f,
-                               bounds.getBottom(), bounds.getY());
+        float y = juce::jmap(dB, -24.0f, 24.0f,
+            bounds.getBottom(), bounds.getY());
 
         if (px == 0)
             filterCurvePath.startNewSubPath(bounds.getX(), y);
@@ -211,103 +220,181 @@ void ResponseCurveComponent::updateFilterCurve()
 void ResponseCurveComponent::paint(juce::Graphics& g)
 {
     using namespace juce;
+    g.fillAll(Colours::black);
 
-    auto bounds = getLocalBounds();
-    auto w = (float)bounds.getWidth();
-    auto h = (float)bounds.getHeight();
+    auto w = getWidth();
+    auto h = getHeight();
 
-    // --- Fondo ---
-    g.setColour(Colour(20, 20, 25));
-    g.fillRoundedRectangle(bounds.toFloat(), 4.0f);
+    // =====================================================================
+    // NUEVO: Reservamos 20 píxeles abajo para las etiquetas del eje X
+    // =====================================================================
+    int bottomMargin = 20;
+    float graphHeight = (float)(h - bottomMargin);
 
-    // --- Grid de frecuencias (líneas verticales) ---
-    g.setColour(Colour(50, 50, 55));
-    const float gridFreqs[] = { 50, 100, 200, 500, 1000, 2000, 5000, 10000 };
-    for (auto freq : gridFreqs)
+    auto sampleRate = audioProcessor.getSampleRate();
+
+    // =====================================================================
+    // 1. REJILLA Y TEXTOS (Ejes X e Y funcionales)
+    // =====================================================================
+    g.setFont(12.0f);
+
+    // --- Eje X (Líneas de frecuencia y etiquetas) ---
+    std::vector<float> freqs = { 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 };
+    for (auto f : freqs)
     {
-        float x = mapFreqToX(freq, 0.0f, w);
-        g.drawVerticalLine((int)x, 0.0f, h);
+        auto x = mapFreqToX(f, 0.0f, (float)w);
 
-        // Etiqueta
-        g.setColour(Colour(70, 70, 75));
-        g.setFont(FontOptions(9.0f));
-        juce::String label = freq < 1000 ? juce::String((int)freq)
-                                         : juce::String((int)(freq / 1000)) + "k";
-        g.drawText(label, (int)x - 12, (int)h - 14, 24, 12, Justification::centred);
-        g.setColour(Colour(50, 50, 55));
-    }
+        // Identificamos las frecuencias principales para resaltarlas
+        bool isMajor = (f == 100.0f || f == 1000.0f || f == 10000.0f);
 
-    // --- Grid de ganancia (líneas horizontales: -24, -12, 0, +12, +24 dB) ---
-    const float gridDBs[] = { -24.0f, -12.0f, 0.0f, 12.0f, 24.0f };
-    for (auto dB : gridDBs)
-    {
-        float y = jmap(dB, -24.0f, 24.0f, h, 0.0f);
-        g.setColour(dB == 0.0f ? Colour(80, 80, 90) : Colour(45, 45, 50));
-        g.drawHorizontalLine((int)y, 0.0f, w);
+        // La línea será más visible si es 100, 1k o 10k
+        g.setColour(isMajor ? juce::Colours::dimgrey.withAlpha(0.6f) : juce::Colours::dimgrey.withAlpha(0.2f));
+        g.drawVerticalLine((int)x, 0.0f, graphHeight);
 
-        // Etiqueta
-        g.setColour(Colour(70, 70, 75));
-        g.setFont(FontOptions(9.0f));
-        juce::String label = (dB > 0 ? "+" : "") + juce::String((int)dB) + "dB";
-        g.drawText(label, 2, (int)y - 6, 28, 12, Justification::left);
-    }
-
-    // ---------------------------------------------------------------
-    //  1. ESPECTRO FFT  (relleno semitransparente + borde brillante)
-    // ---------------------------------------------------------------
-    {
-        auto& data = leftSpectrumAnalyzer.drawingData;
-        int numBins = (int)data.size();  // FFT_SIZE / 2
-
-        Path spectrumPath;
-        bool started = false;
-
-        for (int bin = 1; bin < numBins; ++bin)
-        {
-            float freq = leftSpectrumAnalyzer.binToFreq(bin);
-            if (freq < 20.0f || freq > 20000.0f) continue;
-
-            float x = mapFreqToX(freq, 0.0f, w);
-            float y = jmap(data[bin], 0.0f, 1.0f, h, 0.0f);
-
-            if (!started)
-            {
-                spectrumPath.startNewSubPath(x, h);
-                spectrumPath.lineTo(x, y);
-                started = true;
-            }
-            else
-            {
-                spectrumPath.lineTo(x, y);
-            }
-        }
-
-        if (started)
-        {
-            spectrumPath.lineTo(w, h);
-            spectrumPath.closeSubPath();
-
-            // Relleno semitransparente (verde-azulado)
-            g.setColour(Colour(0, 200, 150).withAlpha(0.12f));
-            g.fillPath(spectrumPath);
-
-            // Borde del espectro
-            g.setColour(Colour(0, 220, 160).withAlpha(0.55f));
-            g.strokePath(spectrumPath, PathStrokeType(1.0f));
+        // Solo dibujamos el texto para las frecuencias principales (más 20 y 20k) para no saturar
+        if (isMajor || f == 20 || f == 20000) {
+            g.setColour(isMajor ? juce::Colours::white : juce::Colours::lightgrey);
+            juce::String label = (f >= 1000) ? juce::String(f / 1000, 0) + "k" : juce::String(f, 0);
+            g.drawText(label, (int)x - 15, (int)graphHeight + 2, 30, 14, juce::Justification::centred);
         }
     }
 
-    // ---------------------------------------------------------------
-    //  2. CURVA DE FILTROS  (línea blanca sobre el espectro)
-    // ---------------------------------------------------------------
-    g.setColour(Colour(220, 220, 220));
-    g.strokePath(filterCurvePath, PathStrokeType(2.0f,
-                                                  PathStrokeType::curved,
-                                                  PathStrokeType::rounded));
+    // --- Eje Y Dual (FFT Izquierda / Filtros Derecha) ---
+    std::vector<int> fftLabels = { 0, -18, -36, -54, -72 };
+    std::vector<int> eqLabels = { 24, 12, 0, -12, -24 };
 
-    // --- Borde exterior del componente ---
-    g.setColour(Colour(80, 80, 90));
-    g.drawRoundedRectangle(bounds.toFloat().reduced(0.5f), 4.0f, 1.0f);
+    for (size_t i = 0; i < fftLabels.size(); ++i)
+    {
+        float y = graphHeight * ((float)i / 4.0f);
+        if (i == 4) y = graphHeight - 1.0f;
+
+        g.setColour(juce::Colours::dimgrey.withAlpha(0.5f));
+        g.drawHorizontalLine((int)y, 0.0f, (float)w);
+
+        g.setColour(juce::Colours::lightgrey);
+        g.drawText(juce::String(fftLabels[i]), 4, (int)y - 14, 30, 14, juce::Justification::left);
+        g.drawText(juce::String(eqLabels[i]), w - 34, (int)y - 14, 30, 14, juce::Justification::right);
+    }
+
+    if (sampleRate <= 0) return;
+
+    // =====================================================================
+    // 2. DIBUJAR LA FFT (ALGORITMO SUAVE Y PIXEL-PERFECT)
+    // =====================================================================
+    auto analyzerData = leftSpectrumAnalyzer.getDrawingData();
+    int numBins = FFT_SIZE / 2;
+
+    Path fftPath;
+    bool firstFFTPoint = true;
+
+    for (int x = 0; x < w; ++x)
+    {
+        float freq = mapXToFreq((float)x, 0.0f, (float)w);
+        float binIndex = freq * (float)FFT_SIZE / (float)sampleRate;
+
+        int binLower = jlimit(0, numBins - 2, (int)binIndex);
+        int binUpper = binLower + 1;
+        float fraction = binIndex - (float)binLower;
+
+        float valLower = analyzerData[binLower];
+        float valUpper = analyzerData[binUpper];
+        float smoothedVal = valLower + fraction * (valUpper - valLower);
+
+        // Mapeamos al alto de la gráfica (graphHeight) en vez del alto del componente
+        float y = jmap(smoothedVal, 0.0f, 1.0f, graphHeight, 0.0f);
+
+        if (firstFFTPoint) {
+            fftPath.startNewSubPath((float)x, y);
+            firstFFTPoint = false;
+        }
+        else {
+            fftPath.lineTo((float)x, y);
+        }
+    }
+
+    // Cerramos la curva hasta el límite de graphHeight
+    fftPath.lineTo((float)w, graphHeight);
+    fftPath.lineTo(0.0f, graphHeight);
+    fftPath.closeSubPath();
+
+    // Ajustamos el gradiente también
+    ColourGradient gradient(Colours::cyan.withAlpha(0.6f), 0, graphHeight - 150,
+        Colours::cyan.withAlpha(0.0f), 0, graphHeight, false);
+    g.setGradientFill(gradient);
+    g.fillPath(fftPath);
+
+    g.setColour(Colours::cyan.withAlpha(0.9f));
+    g.strokePath(fftPath, PathStrokeType(1.0f));
+    // =====================================================================
+    // 3. CURVA DE FILTROS (EQ COMPONENT)
+    // =====================================================================
+    juce::Path responseCurve;
+    std::vector<double> mags(w);
+
+    for (int i = 0; i < w; ++i)
+    {
+        double mag = 1.0;
+        auto freq = mapXToFreq((float)i, 0.0f, (float)w);
+        auto& chain = audioProcessor.leftChain;
+
+        if (!chain.isBypassed<1>()) mag *= chain.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+
+        if (!chain.isBypassed<0>()) {
+            auto& lowcut = chain.get<0>();
+            if (!lowcut.isBypassed<0>()) mag *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!lowcut.isBypassed<1>()) mag *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!lowcut.isBypassed<2>()) mag *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!lowcut.isBypassed<3>()) mag *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        }
+
+        if (!chain.isBypassed<2>()) {
+            auto& highcut = chain.get<2>();
+            if (!highcut.isBypassed<0>()) mag *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!highcut.isBypassed<1>()) mag *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!highcut.isBypassed<2>()) mag *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+            if (!highcut.isBypassed<3>()) mag *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
+        }
+
+        if (std::isnan(mag) || std::isinf(mag))
+            mag = (i > 0) ? mags[i - 1] : 1.0;
+
+        mags[i] = mag;
+    }
+
+    bool firstPoint = true;
+    for (int i = 0; i < w; ++i)
+    {
+        auto magDB = juce::Decibels::gainToDecibels(mags[i]);
+
+        // Mapeamos de -24dB a +24dB
+        auto y = juce::jmap((float)magDB, -24.0f, 24.0f, graphHeight, 0.0f);
+
+        
+        y = juce::jlimit(1.0f, graphHeight - 1.0f, y);
+
+        if (firstPoint) {
+            responseCurve.startNewSubPath((float)i, y);
+            firstPoint = false;
+        }
+        else {
+            responseCurve.lineTo((float)i, y);
+        }
+    }
+
+    // Como ahora la matemática es perfecta, podemos quitar el saveState() y el reduceClipRegion()
+    g.setColour(juce::Colours::white);
+    g.strokePath(responseCurve, juce::PathStrokeType(2.0f));
+
+    g.saveState();
+    g.reduceClipRegion(0, 0, w, (int)graphHeight); // Nada se dibujará por debajo del eje X (o por arriba)
+
+    g.setColour(juce::Colours::white);
+    g.strokePath(responseCurve, juce::PathStrokeType(2.0f));
+
+    g.restoreState(); // Restauramos el estado normal de dibujo
+
+    g.setColour(Colours::white);
+    g.strokePath(responseCurve, PathStrokeType(2.0f));
 }
 
 void ResponseCurveComponent::resized()
@@ -320,23 +407,23 @@ void ResponseCurveComponent::resized()
 //==============================================================================
 EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
-      responseCurveComponent(p),
+    responseCurveComponent(p),
 
-      // Sliders: le pasamos el parámetro del APVTS y la unidad a mostrar
-      peakFreqSlider   (*p.apvts.getParameter("Peak Frequency"),  "Hz"),
-      peakGainSlider   (*p.apvts.getParameter("Peak Gain"),       "dB"),
-      peakQualitySlider(*p.apvts.getParameter("Peak Quality"),    ""),
-      lowCutFreqSlider (*p.apvts.getParameter("LowCut Frequency"),"Hz"),
-      highCutFreqSlider(*p.apvts.getParameter("HighCut Frequency"),"Hz"),
+    // Sliders: le pasamos el parámetro del APVTS y la unidad a mostrar
+    peakFreqSlider(*p.apvts.getParameter("Peak Frequency"), "Hz"),
+    peakGainSlider(*p.apvts.getParameter("Peak Gain"), "dB"),
+    peakQualitySlider(*p.apvts.getParameter("Peak Quality"), ""),
+    lowCutFreqSlider(*p.apvts.getParameter("LowCut Frequency"), "Hz"),
+    highCutFreqSlider(*p.apvts.getParameter("HighCut Frequency"), "Hz"),
 
-      // Attachments: sincronizan slider ↔ APVTS automáticamente
-      peakFreqAttachment   (p.apvts, "Peak Frequency",   peakFreqSlider),
-      peakGainAttachment   (p.apvts, "Peak Gain",        peakGainSlider),
-      peakQualityAttachment(p.apvts, "Peak Quality",     peakQualitySlider),
-      lowCutFreqAttachment (p.apvts, "LowCut Frequency", lowCutFreqSlider),
-      highCutFreqAttachment(p.apvts, "HighCut Frequency",highCutFreqSlider),
-      lowCutSlopeAttachment(p.apvts, "LowCut Slope",     lowCutSlopeBox),
-      highCutSlopeAttachment(p.apvts,"HighCut Slope",    highCutSlopeBox)
+    // Attachments: sincronizan slider ↔ APVTS automáticamente
+    peakFreqAttachment(p.apvts, "Peak Frequency", peakFreqSlider),
+    peakGainAttachment(p.apvts, "Peak Gain", peakGainSlider),
+    peakQualityAttachment(p.apvts, "Peak Quality", peakQualitySlider),
+    lowCutFreqAttachment(p.apvts, "LowCut Frequency", lowCutFreqSlider),
+    highCutFreqAttachment(p.apvts, "HighCut Frequency", highCutFreqSlider),
+    lowCutSlopeAttachment(p.apvts, "LowCut Slope", lowCutSlopeBox),
+    highCutSlopeAttachment(p.apvts, "HighCut Slope", highCutSlopeBox)
 {
     // Añadir todos los hijos
     addAndMakeVisible(responseCurveComponent);
@@ -350,20 +437,20 @@ EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
 
     // Poblar los ComboBoxes con las opciones del parámetro
     if (auto* param = dynamic_cast<juce::AudioParameterChoice*>(
-            p.apvts.getParameter("LowCut Slope")))
+        p.apvts.getParameter("LowCut Slope")))
     {
         for (int i = 0; i < param->choices.size(); ++i)
             lowCutSlopeBox.addItem(param->choices[i], i + 1);
     }
 
     if (auto* param = dynamic_cast<juce::AudioParameterChoice*>(
-            p.apvts.getParameter("HighCut Slope")))
+        p.apvts.getParameter("HighCut Slope")))
     {
         for (int i = 0; i < param->choices.size(); ++i)
             highCutSlopeBox.addItem(param->choices[i], i + 1);
     }
 
-    setSize(600, 480);
+    setSize(900, 600);
 }
 
 EQAudioProcessorEditor::~EQAudioProcessorEditor() {}
@@ -378,28 +465,39 @@ void EQAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(8);
 
-    // El visualizador ocupa la mitad superior (ajusta el ratio a tu gusto)
-    auto displayArea  = area.removeFromTop(area.getHeight() / 2);
+    // 1. El visualizador ocupa el 65% superior
+    auto displayArea = area.removeFromTop(juce::roundToInt(area.getHeight() * 0.65f));
     responseCurveComponent.setBounds(displayArea);
 
-    // Espacio para los controles
-    area.removeFromTop(8);  // margen
+    // 2. Separación extra entre la gráfica y los controles
+    area.removeFromTop(15);
 
-    // Fila superior de sliders: LowCut | Peak x3 | HighCut
+    // 3. Forzamos una altura máxima para las ruedas para que no se vean gigantes
     auto controlsArea = area;
+    int maxSliderHeight = 110; // Prueba con 110, 100 o 90 px según tu gusto
+    if (controlsArea.getHeight() > maxSliderHeight) {
+        // Centra el rectángulo de controles si nos sobra espacio vertical
+        controlsArea = controlsArea.withSizeKeepingCentre(controlsArea.getWidth(), maxSliderHeight);
+    }
+
     int sliderW = controlsArea.getWidth() / 5;
 
-    lowCutFreqSlider .setBounds(controlsArea.removeFromLeft(sliderW));
-    peakFreqSlider   .setBounds(controlsArea.removeFromLeft(sliderW));
-    peakGainSlider   .setBounds(controlsArea.removeFromLeft(sliderW));
+    // Distribuimos los sliders
+    lowCutFreqSlider.setBounds(controlsArea.removeFromLeft(sliderW));
+    peakFreqSlider.setBounds(controlsArea.removeFromLeft(sliderW));
+    peakGainSlider.setBounds(controlsArea.removeFromLeft(sliderW));
     peakQualitySlider.setBounds(controlsArea.removeFromLeft(sliderW));
     highCutFreqSlider.setBounds(controlsArea);
 
-    // ComboBoxes de slope — debajo de los sliders extremos
-    // (los posicionamos de forma absoluta respecto al editor)
-    int comboH = 24;
-    int comboY = getHeight() - comboH - 8;
+    // 4. Ubicación de los comboboxes de Slope
+    // Los colocamos justo debajo de sus respectivos controles de LowCut y HighCut
+    int comboH = 20;
 
-    lowCutSlopeBox .setBounds(8,              comboY, 120, comboH);
-    highCutSlopeBox.setBounds(getWidth() - 128, comboY, 120, comboH);
+    // LowCut ComboBox debajo del LowCut Freq
+    auto lowCutBounds = lowCutFreqSlider.getBounds();
+    lowCutSlopeBox.setBounds(lowCutBounds.getX() + 10, lowCutBounds.getBottom() + 5, lowCutBounds.getWidth() - 20, comboH);
+
+    // HighCut ComboBox debajo del HighCut Freq
+    auto highCutBounds = highCutFreqSlider.getBounds();
+    highCutSlopeBox.setBounds(highCutBounds.getX() + 10, highCutBounds.getBottom() + 5, highCutBounds.getWidth() - 20, comboH);
 }
