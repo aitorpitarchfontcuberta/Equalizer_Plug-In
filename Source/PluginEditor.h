@@ -118,6 +118,8 @@ public:
     void resized() override;
 
 private:
+    static constexpr int BOTTOM_MARGIN = 20;  // Reservado para etiquetas del eje X
+
     EQAudioProcessor& audioProcessor;
 
     // Flag atómico: un parámetro cambió → necesitamos recalcular la curva
@@ -193,6 +195,9 @@ private:
     // --- Visualizador FFT + curva de filtros ---
     ResponseCurveComponent responseCurveComponent;
 
+    // --- Botón Default ---
+    juce::TextButton defaultButton { "Default" };
+
     // --- Sliders rotatorios ---
     RotarySliderWithLabels peakFreqSlider,
         peakGainSlider,
@@ -216,6 +221,9 @@ private:
 
     ComboAt lowCutSlopeAttachment,
         highCutSlopeAttachment;
+
+    // --- Callback del botón Default ---
+    void resetToDefaults();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQAudioProcessorEditor)
 };

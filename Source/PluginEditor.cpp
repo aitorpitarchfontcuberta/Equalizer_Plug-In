@@ -175,6 +175,11 @@ void ResponseCurveComponent::updateFilterCurve()
     auto bounds = getLocalBounds().toFloat();
     auto width = bounds.getWidth();
 
+    // Aplicamos el mismo margen inferior que en paint() para que la curva se dibuje en la misma área
+    float graphHeight = bounds.getHeight() - BOTTOM_MARGIN;
+    float graphTop = bounds.getY();
+    float graphBottom = graphTop + graphHeight;
+
     filterCurvePath.clear();
 
     // Para cada píxel X calculamos la magnitud total de la cadena de filtros
@@ -205,10 +210,12 @@ void ResponseCurveComponent::updateFilterCurve()
         for (int stage = 0; stage <= chainSettings.highCutSlope; ++stage)
             mag *= highCutCoeffs[stage]->getMagnitudeForFrequency(freq, sampleRate);
 
-        // Convierte magnitud a dB y mapea al eje Y (±24 dB range)
+        // Convierte magnitud a dB y mapea al eje Y (24..−24 dB range)
         float dB = (float)juce::Decibels::gainToDecibels(mag);
-        float y = juce::jmap(dB, -24.0f, 24.0f,
-            bounds.getBottom(), bounds.getY());
+        float y = juce::jmap(dB, 24.0f, -24.0f, graphTop, graphBottom);
+
+        // Climpear y para asegurar que siempre está dentro del área gráfica visible
+        y = juce::jlimit(graphTop, graphBottom, y);
 
         if (px == 0)
             filterCurvePath.startNewSubPath(bounds.getX(), y);
@@ -226,10 +233,10 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
     auto h = getHeight();
 
     // =====================================================================
-    // NUEVO: Reservamos 20 píxeles abajo para las etiquetas del eje X
+    // Reservamos BOTTOM_MARGIN píxeles abajo para las etiquetas del eje X
+    // (mismo valor que se usa en updateFilterCurve())
     // =====================================================================
-    int bottomMargin = 20;
-    float graphHeight = (float)(h - bottomMargin);
+    float graphHeight = (float)(h - BOTTOM_MARGIN);
 
     auto sampleRate = audioProcessor.getSampleRate();
 
@@ -259,7 +266,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
         }
     }
 
-    // --- Eje Y Dual (FFT Izquierda / Filtros Derecha) ---
+    // --- Eje Y Dual (FFT Izquierda: 0..-72dB / Filtros Derecha: 24..-24dB) ---
     std::vector<int> fftLabels = { 0, -18, -36, -54, -72 };
     std::vector<int> eqLabels = { 24, 12, 0, -12, -24 };
 
@@ -328,73 +335,10 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
     // =====================================================================
     // 3. CURVA DE FILTROS (EQ COMPONENT)
     // =====================================================================
-    juce::Path responseCurve;
-    std::vector<double> mags(w);
-
-    for (int i = 0; i < w; ++i)
-    {
-        double mag = 1.0;
-        auto freq = mapXToFreq((float)i, 0.0f, (float)w);
-        auto& chain = audioProcessor.leftChain;
-
-        if (!chain.isBypassed<1>()) mag *= chain.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-
-        if (!chain.isBypassed<0>()) {
-            auto& lowcut = chain.get<0>();
-            if (!lowcut.isBypassed<0>()) mag *= lowcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!lowcut.isBypassed<1>()) mag *= lowcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!lowcut.isBypassed<2>()) mag *= lowcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!lowcut.isBypassed<3>()) mag *= lowcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-        }
-
-        if (!chain.isBypassed<2>()) {
-            auto& highcut = chain.get<2>();
-            if (!highcut.isBypassed<0>()) mag *= highcut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!highcut.isBypassed<1>()) mag *= highcut.get<1>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!highcut.isBypassed<2>()) mag *= highcut.get<2>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-            if (!highcut.isBypassed<3>()) mag *= highcut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
-        }
-
-        if (std::isnan(mag) || std::isinf(mag))
-            mag = (i > 0) ? mags[i - 1] : 1.0;
-
-        mags[i] = mag;
-    }
-
-    bool firstPoint = true;
-    for (int i = 0; i < w; ++i)
-    {
-        auto magDB = juce::Decibels::gainToDecibels(mags[i]);
-
-        // Mapeamos de -24dB a +24dB
-        auto y = juce::jmap((float)magDB, -24.0f, 24.0f, graphHeight, 0.0f);
-
-        
-        y = juce::jlimit(1.0f, graphHeight - 1.0f, y);
-
-        if (firstPoint) {
-            responseCurve.startNewSubPath((float)i, y);
-            firstPoint = false;
-        }
-        else {
-            responseCurve.lineTo((float)i, y);
-        }
-    }
-
-    // Como ahora la matemática es perfecta, podemos quitar el saveState() y el reduceClipRegion()
+    // Dibujamos filterCurvePath, que fue calculado de forma segura en updateFilterCurve()
+    // sin acceder a objetos modificados desde el audio thread.
     g.setColour(juce::Colours::white);
-    g.strokePath(responseCurve, juce::PathStrokeType(2.0f));
-
-    g.saveState();
-    g.reduceClipRegion(0, 0, w, (int)graphHeight); // Nada se dibujará por debajo del eje X (o por arriba)
-
-    g.setColour(juce::Colours::white);
-    g.strokePath(responseCurve, juce::PathStrokeType(2.0f));
-
-    g.restoreState(); // Restauramos el estado normal de dibujo
-
-    g.setColour(Colours::white);
-    g.strokePath(responseCurve, PathStrokeType(2.0f));
+    g.strokePath(filterCurvePath, juce::PathStrokeType(2.0f));
 }
 
 void ResponseCurveComponent::resized()
@@ -427,6 +371,7 @@ EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
 {
     // Añadir todos los hijos
     addAndMakeVisible(responseCurveComponent);
+    addAndMakeVisible(defaultButton);
 
     for (auto* slider : { &peakFreqSlider, &peakGainSlider, &peakQualitySlider,
                           &lowCutFreqSlider, &highCutFreqSlider })
@@ -434,6 +379,9 @@ EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
 
     addAndMakeVisible(lowCutSlopeBox);
     addAndMakeVisible(highCutSlopeBox);
+
+    // Configurar el botón Default
+    defaultButton.onClick = [this] { resetToDefaults(); };
 
     // Poblar los ComboBoxes con las opciones del parámetro
     if (auto* param = dynamic_cast<juce::AudioParameterChoice*>(
@@ -464,6 +412,9 @@ void EQAudioProcessorEditor::paint(juce::Graphics& g)
 void EQAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds().reduced(8);
+
+    // 0. Botón Default en la esquina superior izquierda
+    defaultButton.setBounds(8, 8, 80, 24);
 
     // 1. El visualizador ocupa el 65% superior
     auto displayArea = area.removeFromTop(juce::roundToInt(area.getHeight() * 0.65f));
@@ -497,7 +448,21 @@ void EQAudioProcessorEditor::resized()
     auto lowCutBounds = lowCutFreqSlider.getBounds();
     lowCutSlopeBox.setBounds(lowCutBounds.getX() + 10, lowCutBounds.getBottom() + 5, lowCutBounds.getWidth() - 20, comboH);
 
-    // HighCut ComboBox debajo del HighCut Freq
-    auto highCutBounds = highCutFreqSlider.getBounds();
-    highCutSlopeBox.setBounds(highCutBounds.getX() + 10, highCutBounds.getBottom() + 5, highCutBounds.getWidth() - 20, comboH);
-}
+         // HighCut ComboBox debajo del HighCut Freq
+        auto highCutBounds = highCutFreqSlider.getBounds();
+        highCutSlopeBox.setBounds(highCutBounds.getX() + 10, highCutBounds.getBottom() + 5, highCutBounds.getWidth() - 20, comboH);
+    }
+
+    void EQAudioProcessorEditor::resetToDefaults()
+    {
+        // Resetear los parámetros flotantes a sus valores por defecto
+        audioProcessor.apvts.getParameter("LowCut Frequency")->setValueNotifyingHost(0.0f);   // 20 Hz
+        audioProcessor.apvts.getParameter("HighCut Frequency")->setValueNotifyingHost(1.0f);  // 20000 Hz
+        audioProcessor.apvts.getParameter("Peak Frequency")->setValueNotifyingHost(audioProcessor.apvts.getParameter("Peak Frequency")->getDefaultValue());
+        audioProcessor.apvts.getParameter("Peak Gain")->setValueNotifyingHost(0.5f);          // 0 dB (centro del rango)
+        audioProcessor.apvts.getParameter("Peak Quality")->setValueNotifyingHost(audioProcessor.apvts.getParameter("Peak Quality")->getDefaultValue());
+
+        // Resetear los slopes a 12 dB/Oct (índice 0)
+        audioProcessor.apvts.getParameter("LowCut Slope")->setValueNotifyingHost(0.0f);
+        audioProcessor.apvts.getParameter("HighCut Slope")->setValueNotifyingHost(0.0f);
+    }
