@@ -21,10 +21,21 @@ struct ChainSettings
     float peakFreq          { 0 };
     float peakGainInDecibels{ 0 };
     float peakQuality       { 1.0f };
+    float peak2Freq         { 0 };
+    float peak2GainInDecibels{ 0 };
+    float peak2Quality      { 1.0f };
+    float peak3Freq         { 0 };
+    float peak3GainInDecibels{ 0 };
+    float peak3Quality      { 1.0f };
     float lowCutFreq        { 0 };
     float highCutFreq       { 0 };
     Slope lowCutSlope       { Slope::Slope_12 };
     Slope highCutSlope      { Slope::Slope_12 };
+    bool  lowCutBypass      { false };
+    bool  peakBypass        { false };
+    bool  peak2Bypass       { false };
+    bool  peak3Bypass       { false };
+    bool  highCutBypass     { false };
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts);
@@ -173,15 +184,17 @@ public:
     // --- Tipos del procesador de filtros ---
     using Filter = juce::dsp::IIR::Filter<float>;
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
-    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>;
     MonoChain leftChain, rightChain;
 
 private:
 
-    enum ChainPositions { LowCut, Peak, HighCut };
+    enum ChainPositions { LowCut, Peak, Peak2, Peak3, HighCut };
 
     // --- Actualización de filtros ---
     void updatePeakFilter     (const ChainSettings& s);
+    void updatePeak2Filter    (const ChainSettings& s);
+    void updatePeak3Filter    (const ChainSettings& s);
     void updateLowCutFilters  (const ChainSettings& s);
     void updateHighCutFilters (const ChainSettings& s);
     void updateFilters();

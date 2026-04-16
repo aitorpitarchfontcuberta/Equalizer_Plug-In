@@ -129,6 +129,11 @@ private:
     // cuando cambia cualquier parámetro (sin tocar el audio thread)
     juce::Path filterCurvePath;
 
+    // Posiciones de los puntos de los peaks (píxel X, píxel Y)
+    float peakPointX{ 0.0f }, peakPointY{ 0.0f };
+    float peak2PointX{ 0.0f }, peak2PointY{ 0.0f };
+    float peak3PointX{ 0.0f }, peak3PointY{ 0.0f };
+
     // Analizador FFT
     SpectrumAnalyzer leftSpectrumAnalyzer;
 
@@ -144,11 +149,15 @@ private:
 // ============================================================
 struct RotarySliderWithLabels : juce::Slider
 {
-    RotarySliderWithLabels(juce::RangedAudioParameter& param, const juce::String& unitSuffix)
+    enum SliderType { Default, Peak1, Peak2, Peak3 };
+
+    RotarySliderWithLabels(juce::RangedAudioParameter& param, const juce::String& unitSuffix, SliderType type = Default)
         : juce::Slider(juce::Slider::RotaryHorizontalVerticalDrag,
             juce::Slider::NoTextBox),
         param(&param),
-        suffix(unitSuffix)
+        suffix(unitSuffix),
+        sliderType(type),
+        isBypassed(false)
     {
         setLookAndFeel(&lnf);
     }
@@ -170,6 +179,15 @@ struct RotarySliderWithLabels : juce::Slider
     };
 
     juce::String getDisplayString() const;
+
+    void setBypassState(bool bypassed) 
+    { 
+        isBypassed = bypassed;
+        repaint();
+    }
+
+    SliderType sliderType{ Default };
+    bool isBypassed{ false };
 
 private:
     LookAndFeel lnf;
@@ -198,10 +216,23 @@ private:
     // --- Botón Default ---
     juce::TextButton defaultButton { "Default" };
 
+    // --- Botones On/Off para cada filtro ---
+    juce::ToggleButton lowCutToggle { "LowCut" };
+    juce::ToggleButton peakToggle { "Peak" };
+    juce::ToggleButton peak2Toggle { "Peak2" };
+    juce::ToggleButton peak3Toggle { "Peak3" };
+    juce::ToggleButton highCutToggle { "HighCut" };
+
     // --- Sliders rotatorios ---
     RotarySliderWithLabels peakFreqSlider,
         peakGainSlider,
         peakQualitySlider,
+        peak2FreqSlider,
+        peak2GainSlider,
+        peak2QualitySlider,
+        peak3FreqSlider,
+        peak3GainSlider,
+        peak3QualitySlider,
         lowCutFreqSlider,
         highCutFreqSlider;
 
@@ -216,6 +247,12 @@ private:
     SliderAt peakFreqAttachment,
         peakGainAttachment,
         peakQualityAttachment,
+        peak2FreqAttachment,
+        peak2GainAttachment,
+        peak2QualityAttachment,
+        peak3FreqAttachment,
+        peak3GainAttachment,
+        peak3QualityAttachment,
         lowCutFreqAttachment,
         highCutFreqAttachment;
 
