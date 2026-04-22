@@ -1,6 +1,6 @@
 # Equalizer Plug-In
 
-## RELEASE 1 AVAILABLE
+## [RELEASE 1 AVAILABLE](../../releases/latest)
 
 ## Project Overview
 This repository contains a basic audio equalizer plugin developed in C++ using the JUCE framework. The plugin is currently under active development with continuous updates focused on adding modules and building a more complex and consistent system.
