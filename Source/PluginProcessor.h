@@ -180,14 +180,44 @@ public:
     SingleChannelSampleFifo<juce::AudioBuffer<float>> leftChannelFifo  { Channel::Left  };
     SingleChannelSampleFifo<juce::AudioBuffer<float>> rightChannelFifo { Channel::Right };
 
-    
+    // ----------------------------------------------------------
+    //  File Player — solo activo en el standalone
+    //  El editor abre el fichero; el processor lo reproduce
+    //  mezclándolo en processBlock antes de pasar por los filtros.
+    // ----------------------------------------------------------
+    juce::AudioFormatManager formatManager;
+
+    // Carga un fichero de audio. Devuelve true si tiene éxito.
+    bool loadAudioFile(const juce::File& file);
+
+    // Play / pause / stop
+    void filePlayerPlay();
+    void filePlayerStop();
+    bool isFilePlayerPlaying() const;
+
+    // true si hay un fichero cargado (aunque esté pausado)
+    bool hasFileLoaded() const;
+
+    // Nombre del fichero cargado (para mostrar en el botón)
+    juce::String getLoadedFileName() const;
+
+    // Volumen de mezcla del fichero (0..1)
+    void   setFilePlayerGain(float gain);
+    float  getFilePlayerGain() const;
+
+private:
+    // Componentes del player — acceso solo desde el processor
+    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
+    juce::AudioTransportSource                     transportSource;
+    juce::CriticalSection                          playerLock;
+    juce::String                                   loadedFileName;
+    float                                          filePlayerGain { 0.8f };
+
     // --- Tipos del procesador de filtros ---
     using Filter = juce::dsp::IIR::Filter<float>;
     using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
     using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, Filter, Filter, CutFilter>;
     MonoChain leftChain, rightChain;
-
-private:
 
     enum ChainPositions { LowCut, Peak, Peak2, Peak3, HighCut };
 

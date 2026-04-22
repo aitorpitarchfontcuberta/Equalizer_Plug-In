@@ -2,7 +2,8 @@
 
 <JUCERPROJECT id="YZn1De" name="EQ" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" companyName="AitorPitarchFontcuberta"
-              companyWebsite="https://github.com/aitorpitarchfontcuberta">
+              companyWebsite="https://github.com/aitorpitarchfontcuberta" pluginVST3Category="EQ"
+              pluginAAXCategory="1">
   <MAINGROUP id="CADpH7" name="EQ">
     <GROUP id="{9CC3B82F-3615-B5FB-7625-D68155AE5C55}" name="Source">
       <FILE id="DkhTw2" name="PluginProcessor.cpp" compile="1" resource="0"

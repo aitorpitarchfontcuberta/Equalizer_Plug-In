@@ -20,6 +20,8 @@ EQAudioProcessor::EQAudioProcessor()
                        )
 #endif
 {
+    // Registra todos los formatos de audio que JUCE soporta (WAV, AIFF, MP3, FLAC, OGG...)
+    formatManager.registerBasicFormats();
 }
 
 EQAudioProcessor::~EQAudioProcessor() {}
@@ -74,16 +76,19 @@ void EQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 
     updateFilters();
 
-    // -----------------------------------------------------------------
-    //  Prepara los FIFOs con el tamaño de bloque actual.
-    //  Usamos fftSize (2048) para que siempre haya suficientes muestras
-    //  para un análisis FFT completo.
-    // -----------------------------------------------------------------
-        leftChannelFifo.prepare(8192);
-        rightChannelFifo.prepare(8192);
+    leftChannelFifo.prepare(8192);
+    rightChannelFifo.prepare(8192);
+
+    // Prepara el transport para el sampleRate y blockSize actuales
+    juce::ScopedLock sl(playerLock);
+    transportSource.prepareToPlay(samplesPerBlock, sampleRate);
 }
 
-void EQAudioProcessor::releaseResources() {}
+void EQAudioProcessor::releaseResources()
+{
+    juce::ScopedLock sl(playerLock);
+    transportSource.releaseResources();
+}
 
 #ifndef JucePlugin_PreferredChannelConfigurations
 bool EQAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -116,6 +121,31 @@ void EQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
+    // -----------------------------------------------------------------
+    //  File Player: si hay un fichero cargado y en reproducción,
+    //  sustituye el buffer de entrada con las muestras del fichero.
+    //  Usamos tryEnter para no bloquear nunca el audio thread.
+    // -----------------------------------------------------------------
+    {
+        juce::ScopedTryLock stl(playerLock);
+        if (stl.isLocked() && transportSource.isPlaying())
+        {
+            juce::AudioSourceChannelInfo info(&buffer, 0, buffer.getNumSamples());
+            transportSource.getNextAudioBlock(info);
+
+            // Aplica el volumen del player
+            buffer.applyGain(filePlayerGain);
+
+            // Si el fichero tiene 1 canal (mono), duplicamos al canal derecho
+            if (buffer.getNumChannels() >= 2 &&
+                transportSource.getTotalLength() > 0)
+            {
+                // El AudioTransportSource ya llena todos los canales del buffer
+                // No necesitamos hacer nada extra para stereo
+            }
+        }
+    }
+
     updateFilters();
 
     juce::dsp::AudioBlock<float> block(buffer);
@@ -126,11 +156,6 @@ void EQAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     leftChain.process(juce::dsp::ProcessContextReplacing<float>(leftBlock));
     rightChain.process(juce::dsp::ProcessContextReplacing<float>(rightBlock));
 
-    // -----------------------------------------------------------------
-    //  Empuja las muestras YA PROCESADAS al FIFO para el análisis FFT.
-    //  Lo hacemos DESPUÉS de procesar los filtros para que el espectro
-    //  refleje la señal de SALIDA (post-EQ).
-    // -----------------------------------------------------------------
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 }
@@ -141,8 +166,6 @@ bool EQAudioProcessor::hasEditor() const { return true; }
 juce::AudioProcessorEditor* EQAudioProcessor::createEditor()
 {
     return new EQAudioProcessorEditor(*this);
-    // Descomenta la línea anterior cuando tengas el editor implementado.
-    // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -335,6 +358,76 @@ juce::AudioProcessorValueTreeState::ParameterLayout EQAudioProcessor::createPara
     layout.add(std::make_unique<juce::AudioParameterBool>("HighCut Bypass", "HighCut Bypass", false));
 
     return layout;
+}
+
+//==============================================================================
+//  File Player
+//==============================================================================
+bool EQAudioProcessor::loadAudioFile(const juce::File& file)
+{
+    auto* reader = formatManager.createReaderFor(file);
+    if (reader == nullptr)
+        return false;
+
+    auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
+
+    juce::ScopedLock sl(playerLock);
+
+    transportSource.stop();
+    transportSource.setSource(nullptr);
+
+    readerSource = std::move(newSource);
+    loadedFileName = file.getFileName();
+
+    // Conecta el readerSource al transport con resampleo si el sampleRate difiere
+    transportSource.setSource(readerSource.get(),
+                              0,       // readAheadBufferSize (0 = sin lookahead)
+                              nullptr, // readAheadThread
+                              reader->sampleRate,
+                              getTotalNumOutputChannels());
+
+    transportSource.setPosition(0.0);
+    return true;
+}
+
+void EQAudioProcessor::filePlayerPlay()
+{
+    juce::ScopedLock sl(playerLock);
+    // Si llegó al final, rebobina
+    if (transportSource.hasStreamFinished())
+        transportSource.setPosition(0.0);
+    transportSource.start();
+}
+
+void EQAudioProcessor::filePlayerStop()
+{
+    juce::ScopedLock sl(playerLock);
+    transportSource.stop();
+}
+
+bool EQAudioProcessor::isFilePlayerPlaying() const
+{
+    return transportSource.isPlaying();
+}
+
+bool EQAudioProcessor::hasFileLoaded() const
+{
+    return readerSource != nullptr;
+}
+
+juce::String EQAudioProcessor::getLoadedFileName() const
+{
+    return loadedFileName;
+}
+
+void EQAudioProcessor::setFilePlayerGain(float gain)
+{
+    filePlayerGain = juce::jlimit(0.0f, 1.0f, gain);
+}
+
+float EQAudioProcessor::getFilePlayerGain() const
+{
+    return filePlayerGain;
 }
 
 //==============================================================================

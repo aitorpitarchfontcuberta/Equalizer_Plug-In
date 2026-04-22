@@ -122,7 +122,7 @@ private:
 
     EQAudioProcessor& audioProcessor;
 
-    // Flag atómico: un parámetro cambió → necesitamos recalcular la curva
+    // Flag atómico: un parámetro cambió : necesitamos recalcular la curva
     juce::Atomic<bool> parametersChanged{ false };
 
     // Curva de magnitud de los filtros — recalculada en el GUI thread
@@ -216,6 +216,15 @@ private:
     // --- Botón Default ---
     juce::TextButton defaultButton { "Default" };
 
+    // --- Botón Input (carga fichero de audio) ---
+    juce::TextButton inputButton   { "Input" };
+
+    // --- Botón Play/Stop del fichero ---
+    juce::TextButton playStopButton { "Play" };
+
+    // --- Slider de volumen del fichero (aparece solo cuando hay fichero cargado) ---
+    juce::Slider fileVolumeSlider;
+
     // --- Botones On/Off para cada filtro ---
     juce::ToggleButton lowCutToggle { "LowCut" };
     juce::ToggleButton peakToggle { "Peak" };
@@ -261,6 +270,9 @@ private:
 
     // --- Callback del botón Default ---
     void resetToDefaults();
+
+    // FileChooser guardado como miembro para que sobreviva al callback asíncrono
+    std::unique_ptr<juce::FileChooser> fileChooser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(EQAudioProcessorEditor)
 };

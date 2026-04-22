@@ -1,4 +1,4 @@
-/*
+﻿/*
   ==============================================================================
     PluginEditor.cpp
   ==============================================================================
@@ -10,12 +10,12 @@
 //==============================================================================
 //  Constantes de colores para los filtros peak
 //==============================================================================
-static const juce::Colour PEAK1_COLOR  = juce::Colour(220, 80, 80);   // Rojo saturado
-static const juce::Colour PEAK2_COLOR  = juce::Colour(100, 200, 100); // Verde saturado
-static const juce::Colour PEAK3_COLOR  = juce::Colour(220, 180, 60);  // Amarillo/Dorado saturado
+static const juce::Colour PEAK1_COLOR  = juce::Colour(220, 80, 80);   // Rojo 
+static const juce::Colour PEAK2_COLOR  = juce::Colour(100, 200, 100); // Verde 
+static const juce::Colour PEAK3_COLOR  = juce::Colour(220, 180, 60);  // Amarillo 
 
 //==============================================================================
-//  Helpers de layout  (frecuencia → posición X logarítmica)
+//  Helpers de layout  (frecuencia / posición X logarítmica)
 //==============================================================================
 
 static float mapXToFreq(float x, float leftX, float width)
@@ -220,7 +220,7 @@ void ResponseCurveComponent::timerCallback()
 void ResponseCurveComponent::updateFilterCurve()
 {
     // -------------------------------------------------------------------
-    //  IMPORTANTE: recalculamos los coeficientes DESDE EL APVTS,
+    //  recalculamos los coeficientes DESDE EL APVTS,
     //  sin tocar los objetos de filtro del audio thread.
     //  Así evitamos cualquier data-race.
     // -------------------------------------------------------------------
@@ -614,7 +614,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
                       pointRadius * 2.0f, pointRadius * 2.0f, 1.5f);
     }
 
-    // Peak 3 (5kHz) - Color Amarillo/Dorado
+    // Peak 3 (5kHz) - Color Amarillo
     if (!chainSettings.peak3Bypass)
     {
         g.setColour(PEAK3_COLOR);
@@ -651,7 +651,7 @@ EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
     lowCutFreqSlider(*p.apvts.getParameter("LowCut Frequency"), "Hz", RotarySliderWithLabels::Default),
     highCutFreqSlider(*p.apvts.getParameter("HighCut Frequency"), "Hz", RotarySliderWithLabels::Default),
 
-    // Attachments: sincronizan slider ↔ APVTS automáticamente
+    // Attachments: sincronizan slider y APVTS automáticamente
     peakFreqAttachment(p.apvts, "Peak Frequency", peakFreqSlider),
     peakGainAttachment(p.apvts, "Peak Gain", peakGainSlider),
     peakQualityAttachment(p.apvts, "Peak Quality", peakQualitySlider),
@@ -762,6 +762,72 @@ EQAudioProcessorEditor::EQAudioProcessorEditor(EQAudioProcessor& p)
             highCutSlopeBox.addItem(param->choices[i], i + 1);
     }
 
+    // ---------------------------------------------------------------
+    //  Botón INPUT — abre FileChooser y carga el fichero en el processor
+    // ---------------------------------------------------------------
+    addAndMakeVisible(inputButton);
+    inputButton.onClick = [this]()
+    {
+        // fileChooser se guarda como miembro para que no se destruya antes del callback
+        fileChooser = std::make_unique<juce::FileChooser>(
+            "Selecciona un fichero de audio",
+            juce::File::getSpecialLocation(juce::File::userMusicDirectory),
+            "*.wav;*.aiff;*.aif;*.mp3;*.flac;*.ogg;*.m4a");
+
+        fileChooser->launchAsync(
+            juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+            [this](const juce::FileChooser& fc)
+            {
+                auto result = fc.getResult();
+                if (result.existsAsFile())
+                {
+                    bool ok = audioProcessor.loadAudioFile(result);
+                    if (ok)
+                    {
+                        // Actualiza el texto del botón con el nombre del fichero
+                        inputButton.setButtonText(result.getFileNameWithoutExtension());
+                        playStopButton.setButtonText("Play");
+                        playStopButton.setVisible(true);
+                        fileVolumeSlider.setVisible(true);
+                        resized(); // reposicionar por si los botones cambiaron de tamaño
+                    }
+                }
+            });
+    };
+
+    // ---------------------------------------------------------------
+    //  Botón PLAY/STOP
+    // ---------------------------------------------------------------
+    addAndMakeVisible(playStopButton);
+    playStopButton.setVisible(audioProcessor.hasFileLoaded());
+    playStopButton.onClick = [this]()
+    {
+        if (audioProcessor.isFilePlayerPlaying())
+        {
+            audioProcessor.filePlayerStop();
+            playStopButton.setButtonText("Play");
+        }
+        else
+        {
+            audioProcessor.filePlayerPlay();
+            playStopButton.setButtonText("Stop");
+        }
+    };
+
+    // ---------------------------------------------------------------
+    //  Slider de volumen del fichero
+    // ---------------------------------------------------------------
+    fileVolumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    fileVolumeSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    fileVolumeSlider.setRange(0.0, 1.0);
+    fileVolumeSlider.setValue(audioProcessor.getFilePlayerGain());
+    fileVolumeSlider.setVisible(audioProcessor.hasFileLoaded());
+    fileVolumeSlider.onValueChange = [this]()
+    {
+        audioProcessor.setFilePlayerGain((float)fileVolumeSlider.getValue());
+    };
+    addAndMakeVisible(fileVolumeSlider);
+
     setSize(900, 600);
 }
 
@@ -796,13 +862,28 @@ void EQAudioProcessorEditor::resized()
     // 0. Botón Default en la esquina superior izquierda
     defaultButton.setBounds(8, 8, 80, 24);
 
+    // Botón Input + Play/Stop + slider de volumen en la esquina superior derecha
+    int topBarY    = 8;
+    int topBarH    = 24;
+    int rightEdge  = getWidth() - 8;
+
+    // Slider de volumen (solo visible si hay fichero): 80px de ancho
+    int volW = 80;
+    fileVolumeSlider.setBounds(rightEdge - volW, topBarY, volW, topBarH);
+
+    // Play/Stop: 50px a la izquierda del slider
+    int playW = 50;
+    playStopButton.setBounds(rightEdge - volW - 4 - playW, topBarY, playW, topBarH);
+
+    // Input: 120px a la izquierda del play/stop
+    int inputW = 120;
+    inputButton.setBounds(rightEdge - volW - 4 - playW - 4 - inputW, topBarY, inputW, topBarH);
+
     // 1. El visualizador ocupa el 65% superior
     auto displayArea = area.removeFromTop(juce::roundToInt(area.getHeight() * 0.65f));
     responseCurveComponent.setBounds(displayArea);
 
     // 2. Separación extra entre la gráfica y los controles
-    // COMENTADO: movemos el buttonArea 35px más arriba eliminando esta separación
-    // area.removeFromTop(15);
 
     // 3. Área de controles
     auto controlsArea = area;
@@ -814,18 +895,13 @@ void EQAudioProcessorEditor::resized()
     // 4. Dividimos en 5 secciones iguales
     int sectionWidth = controlsArea.getWidth() / 5;
 
-    // Los botones On/Off se solapan con la parte inferior del gráfico,
-    // desplazados exactamente buttonAreaHeight píxeles hacia arriba.
-    // Como son hijos del editor (no del responseCurveComponent),
-    // se dibujan encima de él automáticamente.
+   
     int buttonAreaHeight = 35;
     int buttonY = displayArea.getBottom();  // justo debajo del gráfico, en el límite
 
-    // El área de sliders usa TODA la controlsArea (ya no cedemos 35px para botones)
     auto sliderArea = controlsArea;
 
     // Posicionamiento de botones On/Off
-    // Aparecen sobre el gráfico (solapados), alineados con sus secciones
     int buttonSize = 24;
     int buttonPadding = 3;
     int buttonToggleY = buttonY + buttonPadding;
@@ -858,7 +934,7 @@ void EQAudioProcessorEditor::resized()
     auto section1 = sliderAreaWithMargin.withLeft(sliderAreaWithMargin.getX()).withWidth(sectionWidth);
     lowCutFreqSlider.setBounds(section1);
 
-    // Combobox de LowCut Slope debajo, también bajado
+    // Combobox de LowCut Slope debajo
     auto lowCutBounds = lowCutFreqSlider.getBounds();
     lowCutSlopeBox.setBounds(lowCutBounds.getX() + 5, lowCutBounds.getBottom() + 5, lowCutBounds.getWidth() - 10, 20);
 
