@@ -117,6 +117,18 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
 
+    // ----------------------------------------------------------
+    //  Interacción ratón → parámetros (Release 2)
+    //  Permite arrastrar los puntos de colores para modificar
+    //  Freq (X), Gain (Y) y Q (rueda; Ctrl = ×3) en tiempo real.
+    // ----------------------------------------------------------
+    void mouseMove     (const juce::MouseEvent& e) override;
+    void mouseDown     (const juce::MouseEvent& e) override;
+    void mouseDrag     (const juce::MouseEvent& e) override;
+    void mouseUp       (const juce::MouseEvent& e) override;
+    void mouseWheelMove(const juce::MouseEvent& e,
+                        const juce::MouseWheelDetails& wheel) override;
+
 private:
     static constexpr int BOTTOM_MARGIN = 20;  // Reservado para etiquetas del eje X
 
@@ -139,6 +151,21 @@ private:
 
     // Recalcula filterCurvePath a partir de los valores actuales del APVTS
     void updateFilterCurve();
+
+    // ----------------------------------------------------------
+    //  Estado de interacción con los puntos peak
+    //  activeDragPeak: -1 = ninguno, 0 = Peak1, 1 = Peak2, 2 = Peak3
+    // ----------------------------------------------------------
+    int activeDragPeak{ -1 };
+
+    // Hit-test: índice (0,1,2) del peak más cercano dentro del radio
+    // de selección, o -1 si no hay ninguno bajo el cursor.
+    int  findPeakAt(juce::Point<float> pos) const;
+
+    // Apertura/cierre de gesto de automatización de Freq+Gain
+    // para que el host (DAW) registre el drag como una sola edición.
+    void beginGestureForPeak(int peak);
+    void endGestureForPeak  (int peak);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ResponseCurveComponent)
 };
@@ -210,11 +237,19 @@ public:
 private:
     EQAudioProcessor& audioProcessor;
 
+    // --- LookAndFeel propio del editor (toggles, combos, label, popups).
+    //     Los knobs siguen usando su propio LookAndFeel interno (no afectado).
+    juce::LookAndFeel_V4 editorLnF;
+
     // --- Visualizador FFT + curva de filtros ---
     ResponseCurveComponent responseCurveComponent;
 
     // --- Botón Default ---
     juce::TextButton defaultButton { "Default" };
+
+    // --- Selector de Skin (Standard / Dark / Light) ---
+    juce::Label    skinLabel { {}, "Skin" };
+    juce::ComboBox skinBox;
 
     // --- Botón Input (carga fichero de audio) ---
     juce::TextButton inputButton   { "Input" };
@@ -270,6 +305,10 @@ private:
 
     // --- Callback del botón Default ---
     void resetToDefaults();
+
+    // --- Aplica al LookAndFeel propio y a los controles JUCE los colores
+    //     del skin actual (toggles, combos, label, botones, popups).
+    void applySkinToControls();
 
     // FileChooser guardado como miembro para que sobreviva al callback asíncrono
     std::unique_ptr<juce::FileChooser> fileChooser;
