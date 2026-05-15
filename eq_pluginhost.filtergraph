@@ -16,7 +16,7 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="3" x="0.5" y="0.9" useARA="0">
+  <FILTER uid="3" x="0.7125" y="0.8835227272727273" useARA="0">
     <PLUGIN name="Audio Output" descriptiveName="" format="Internal" category="I/O devices"
             manufacturer="JUCE" version="1.0" file="" uniqueId="724248cb"
             isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="2"
@@ -31,26 +31,11 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
-  <FILTER uid="4" x="0.25" y="0.9" useARA="0">
-    <PLUGIN name="MIDI Output" descriptiveName="" format="Internal" category="I/O devices"
-            manufacturer="JUCE" version="1.0" file="" uniqueId="9d5bbb00"
-            isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="0"
-            numOutputs="0" isShell="0" hasARAExtension="0" uid="9d5bbb00"/>
-    <STATE>0.</STATE>
-    <LAYOUT>
-      <INPUTS>
-        <BUS index="0" layout="disabled"/>
-      </INPUTS>
-      <OUTPUTS>
-        <BUS index="0" layout="disabled"/>
-      </OUTPUTS>
-    </LAYOUT>
-  </FILTER>
   <FILTER uid="6" x="0.5785714285714286" y="0.40625" useARA="0" uiLastX_Normal="148"
           uiLastY_Normal="69" uiopen_Normal="0">
-    <PLUGIN name="EQ" format="VST3" category="Fx" manufacturer="AitorPitarchFontcuberta"
+    <PLUGIN name="EQ" format="VST3" category="Fx|EQ" manufacturer="AitorPitarchFontcuberta"
             version="1.0.0" file="C:\Users\Aitor\Desktop\Audio\EQ\Builds\VisualStudio2026\x64\Debug\VST3\EQ.vst3\Contents\x86_64-win\EQ.vst3"
-            uniqueId="6aedfe6" isInstrument="0" fileTime="19dff189331" infoUpdateTime="19dff1c47f7"
+            uniqueId="6aedfe6" isInstrument="0" fileTime="19e01b3fa98" infoUpdateTime="19e25761b68"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="e95cc589"/>
     <STATE>191.VMjLgXK....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9XCLt3hKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYjKAQjYPQSPWgUdMcjKAQjct3hdA4hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEV77RRC8Vav8lak4Fc9vyKVMEUy.Ea0cVZtMEcgQWY9..</STATE>
@@ -64,10 +49,10 @@
     </LAYOUT>
   </FILTER>
   <FILTER uid="7" x="0.6" y="0.2102272727272727" useARA="0" uiLastX_Normal="547"
-          uiLastY_Normal="131" uiopen_Normal="1">
+          uiLastY_Normal="131" uiopen_Normal="0">
     <PLUGIN name="AudioFilePlayer" format="VST3" category="Fx" manufacturer="Matkat Music LLC"
             version="1.0.0" file="C:\Users\Aitor\Documents\AudioFilePlayer\Builds\VisualStudio2026\x64\Debug\VST3\AudioFilePlayer.vst3\Contents\x86_64-win\AudioFilePlayer.vst3"
-            uniqueId="79fe81c" isInstrument="0" fileTime="19d3f9c3690" infoUpdateTime="19dff1c47f8"
+            uniqueId="79fe81c" isInstrument="0" fileTime="19d3f9c3690" infoUpdateTime="19e25761b69"
             numInputs="2" numOutputs="2" isShell="0" hasARAExtension="0"
             uid="e95d02c7"/>
     <STATE>295.VMjLg3Q....O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9DyL23BTIISX1UEaho2ZVkUdAAkKAwDUigWRWkEcQ0VTucmUY4BQPwTQLolShUELhsVRxHlXEQkV5gCahIFLTMVdqECVhUDQh4VUFQlYPAyXuQiQHMmKBYkdEYTXlYlPRE0ZnszbAICSt3hKt3hKt3hKt3hKt3FUUMTUDQEdqw1XmE0UYQTQFM1YAAkKAgDUjYWQwHVdAAkKAwjKtLlKt3hKt3hKt3hYRUUSTEETIckVwTjQisVTTgkdEYDOujzPu0Fbu4VYtQmO77hUSQ0LPwVcmklaSQWXzUlO..</STATE>
@@ -80,8 +65,41 @@
       </OUTPUTS>
     </LAYOUT>
   </FILTER>
+  <FILTER uid="8" x="0.2821428571428571" y="0.3352272727272727" useARA="0"
+          uiLastX_Normal="373" uiLastY_Normal="61" uiopen_Normal="0">
+    <PLUGIN name="Synth" format="VST3" category="Instrument|Synth" manufacturer="AitorPitarchFontcuberta"
+            version="1.0.0" file="C:\Users\Aitor\Desktop\Audio\Synth-Project\Synth\Builds\VisualStudio2026\x64\Debug\VST3\Synth.vst3\Contents\x86_64-win\Synth.vst3"
+            uniqueId="fa66e4e8" isInstrument="1" fileTime="19e25645f04" infoUpdateTime="19e25761b69"
+            numInputs="0" numOutputs="2" isShell="0" hasARAExtension="0"
+            uid="e956436a"/>
+    <STATE>2539.VMjLgHdB...O+fWarAhckI2bo8la8HRLt.iHfTlai8FYo41Y8HRUTYTK3HxO9.BOVMEUy.Ea0cVZtMEcgQWY9vSRC8Vav8lak4Fc9DCNwjiKV0jZLcFVyEjKt3xSqX1UgIWPnM1ZIIiXugCaggCRRwDctjFRlQEagkFNFk0azDSV3fjTUQUVTszLHg2S43hPOETPqUEUMs1S23RUPIUQTMkYpYTV3fjTPQUTUA0PyoFRlg0UXIWUWkENHIDSz4xPLcmKCwjctLDS14xPMICTS4jLPMUS2gDdKkicCQUPIUETMEjTZoFLogDQUoGTAs1ZHYFVWgkbUcUV3fjPLQmXS0DMtLDS14xPLkGS4wjLlkVS1QTZHU2LC8DTEoFUAACQH8VTV8DZXQ0TkUDUS8TUqMEUIIDRwTjQgASUV8DZtj1R5wzPLYmKCwjctjWS2QUZLACU40jdHg2R4X2PTETRUAUSAIkVpASZHczcTIEQUoFRlg0UXIWUWkENHIDSzQUZMkmKCwjctjFS4wTZMAiKowjclkFR0MyPOAUQpQUPvPDRuEkUOglcpE0SEk2UDUEQTQ0YpgjYXcEVxU0UYgCRBwDcTMTSz3xPLYmKowjdhMkSvPUdLgGRogTcyLzSPUjZTEDLDgzaQY0SnYmZQ8TQ4cEQUoGUTkjPHESQFEFLUY0SnQTZKYGR3sTN1MDUAkTUP0TPRokZvjFRLkkdSc2MqQUPQUUTn4BZic1cVM1ZvjFR1MiPLYmZS4DMpMkSznVdMICVC0zLHMUSyfTZHU2LC8DTEoFUAACQH8VTV8DZ1oVTOUTdWcUQpUUQIIDRwTjQgASUV8DZPk1R1gDdKkicCQUPIUETMEjTZoFLogDSYo2T3cSQQUTPEUERIIDRwTjQgASUV8DZtj1R54RZMYmKCwjcDMjS2QzTNMCQowDZ2f1S23RUPIUQTMkYpYTV3fjPSYDNpwTYQQUTSE0ZHYFVWgkbUcUV3fjPMQmKogTcyLzSPUjZTEDLDgzaQY0SnYmZQ8TR4ckTEQTUEkjPHESQFEFLUY0SnQUZKkGTCwjctLDS2QUZLAiY40zLpMESncCZOciKUAkTEQ0TlolQYgCRBMkQ3nFSkMVUPYUUpgjYXcEVxU0UYgCRBwDctjFR0MyPOAUQpQUPvPDRuEkUOgldTA0TQUUTRgCLQEzZpMEZtf1XmcmUisFLogzcyHDSncCZOciKUAkTEQ0TlolQYgCRRMUQznVUkUDQUQUQ5A0RIIDRwTjQgASUV8DZtj1R5wzTNYmKCwjcDMDS5o1PLoGQ40DLHg2R4X2PTETRUAUSAIkVpASZH0TUpMkU3TTTE0DUPkURBgTLEYTXvTkUOglKosTdXkFS14xPLYGQC4TdTMjS3wzPLECR3sTN1MDUAkTUP0TPRokZvjFRMUkZSYENEEUQAUTUHkjPHESQFEFLUY0Sn4RZKAiXo0jctLDS1o1PMoGQ4wjLTkWS4gDdKkicCQUPIUETMEjTZoFLogTSUo1TVgSQQUTSEUEZtf1XmcmUisFLogzcyHDSncCZOciKUAkTEQ0TlolQYgCRRMUQznVUkkTUQwTUTA0TUoFRlg0UXIWUWkENHIDSzQzPLIiKCwjctLDSyfTZLACTC0zcHg2R4X2PTETRUAUSAIkVpASZH0TUpMkU3.CUU0TQUEzZpMEZtf1XmcmUisFLogjcyfWS5g0PLYmKCwDLDMTSzX1PMcGSSwDZ2f1S23RUPIUQTMkYpYTV3fDdSMUSTwjQqo1TEkjPHESQFEFLUY0SnQzPLY2LBwDZ2f1S23RUPIUQTMkYpYTV3fDdSMUSTwzSMQTUAkUUQglKnM1Y2Y0XqASZHc2LBwDZ2f1S23RUPIUQTMkYpYTV3fDdSMUSTwDTisFRlg0UXIWUWkENHIDSzQUZHU2LC8DTEoFUAACQH8VTV8DZ2nGUCUTdTUDLTIEZtf1XmcmUisFLogzbTk1R1gDdKkicCQUPIUETMEjTZoFLogzSMACT2IVUPYUUDUUVAUUTn4BZic1cVM1ZvjFR3MiPLg1Mn8zMtTETRUDUSYlZFkENHg2TS0jZLYzZpMUQIIDRwTjQgASUV8DZ5IES14RZKYGR3sTN1MDUAkTUP0TPRokZvjFRO0DLPg2M5AEUEoVUEkjPHESQFEFLUY0Sn4RZKYGR3sTN1MDUAkTUP0TPRokZvjFRO0DLPgmKvTEZtf1XmcmUisFLogjcyHjSvP0PLYmKCwjLlkVSxX1TLkGQSwDZ2f1S23RUPIUQTMkYpYTV3fDdSMUSpwzTUQ0TIkjPHESQFEFLUY0SnQTZLQmKogTcyLzSPUjZTEDLDgzaQY0SncidTMTR4UUPYUUTTsVQTUTRBgTLEYTXvTkUOgFTosjcHg2R4X2PTETRUAUSAIkVpASZH8TSv.UYvPkTXkjPHESQFEFLUY0Sn4RZKECTS0jctLDS1A0PLACSSwzcTMjS5gDdKkicCQUPIUETMEjTZoFLogzSMACTkAidSQTUpgjYXcEVxU0UYgCR3wDctjFR0MyPOAUQpQUPvPDRuEkUOgFRUEESUQETSUkZHYFVWgkbUcUV3fjPLQGTSwDLtLDS14RZLcGTS0jLXkWS3QTZHU2LC8DTEoFUAACQH8VTV8DZLUUUBgSQSUTVUEESIIDRwTjQgASUV8DZtj1R1gDdKkicCQUPIUETMEjTZoFLogzTUsFTkMVUPYUUpgjYXcEVxU0UYgCRRwDctjFR0MyPOAUQpQUPvPDRuEkUOgFSUU0TQUETIQiZHYFVWgkbUcUV3fjPLQGUC0jLtLDS14xTMYGUC0jdhkGSyXVZHU2LC8DTEoFUAACQH8VTV8DZTs1TI0DLS4DNEEUQQUUUNUkZHYFVWgkbUcUV3fDdLo2L30DMpMkSznVZLkmXCwTLtLUSvfDdKkicCQUPIUETMEjTZoFLogTUzPkTSgiZSUVSEQkTUQETDkjPHESQFEFLUY0Sn4RZKYGR3sTN1MDUAkTUP0TPRokZvjFRUQCURMENpMUYYAyTI0DUQMURBgTLEYTXvTkUOgFSosjcHg2R4X2PTETRUAUSAIkVpASZHYUUDMUYMUUTN0zZHYFVWgkbUcUV3fjPLQGUS0jctLDS14xTLcmZowjcpkFSzfDdKkicCQUPIUETMEjTZoFLogjU3PkTCUkdW0DNDEUQIIDRwTjQgASUV8DZtj1R1gDdKkic4sTPAsVUT0zZO4hKt3hKt3hKt3hKtnTUv.UQAslXuk0UXoWUFE0YQcEVtPDTtHzZGI1YMIiXtPDTtLjKPcjKt3hKt3hKt3haTU0PUQDU3sFaicVTWkEQEYzXmEDOujzPu0Fbu4VYtQmO77hUSQ0LPwVcmklaSQWXzUlO..</STATE>
+    <LAYOUT>
+      <INPUTS/>
+      <OUTPUTS>
+        <BUS index="0" layout="L R"/>
+      </OUTPUTS>
+    </LAYOUT>
+  </FILTER>
+  <FILTER uid="9" x="0.2714285714285714" y="0.8267045454545454" useARA="0">
+    <PLUGIN name="Audio Output" descriptiveName="" format="Internal" category="I/O devices"
+            manufacturer="JUCE" version="1.0" file="" uniqueId="724248cb"
+            isInstrument="0" fileTime="0" infoUpdateTime="0" numInputs="2"
+            numOutputs="0" isShell="0" hasARAExtension="0" uid="724248cb"/>
+    <STATE>0.</STATE>
+    <LAYOUT>
+      <INPUTS>
+        <BUS index="0" layout="L R C Lfe Lss Rss Lrs Rrs"/>
+      </INPUTS>
+      <OUTPUTS>
+        <BUS index="0" layout="disabled"/>
+      </OUTPUTS>
+    </LAYOUT>
+  </FILTER>
+  <CONNECTION srcFilter="2" srcChannel="4096" dstFilter="8" dstChannel="4096"/>
   <CONNECTION srcFilter="6" srcChannel="0" dstFilter="3" dstChannel="0"/>
   <CONNECTION srcFilter="6" srcChannel="1" dstFilter="3" dstChannel="1"/>
   <CONNECTION srcFilter="7" srcChannel="0" dstFilter="6" dstChannel="0"/>
   <CONNECTION srcFilter="7" srcChannel="1" dstFilter="6" dstChannel="1"/>
+  <CONNECTION srcFilter="8" srcChannel="0" dstFilter="9" dstChannel="0"/>
+  <CONNECTION srcFilter="8" srcChannel="1" dstFilter="9" dstChannel="1"/>
 </FILTERGRAPH>
